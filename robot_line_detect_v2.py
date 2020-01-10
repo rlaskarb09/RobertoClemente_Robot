@@ -81,7 +81,8 @@ for i in range(604, 1722):
     eroded_mask = cv2.erode(mask, kernel_erode, iterations=1)
     kernel_dilate = np.ones((6, 6), np.uint8)
     dilated_mask = cv2.dilate(eroded_mask, kernel_dilate, iterations=1)
-
+    
+    ####요기부터 수정
     conts, max_cont, box = find_main_contour(dilated_mask)
     # if cont is not None:
     #     p1, p2 = geom.calc_box_vector(box)
@@ -114,7 +115,7 @@ for i in range(604, 1722):
             print("No angle found")
     else:
         print("No Centroid Found")
-
+    ##### 요기까지 수정
     cv2.drawContours(image, conts, -1, (255, 0, 0), 3)
 
     imagelist.append(image)

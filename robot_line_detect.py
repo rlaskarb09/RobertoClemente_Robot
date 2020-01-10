@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import time
 
 # 이 부분에 로봇에서 받아온 이미지로 수정해서 추가
 datafolder = '/Users/soua/Desktop/Project/RoadImg'
@@ -47,7 +48,9 @@ datafolder = '/Users/soua/Desktop/Project/RoadImg'
 ###############################
 
 imagelist = []
+timelist = []
 for i in range(604, 1722):
+    start_time = time.time()
     imgpath = datafolder + '/Img_%d.jpg'%i
     image = cv2.imread(imgpath)
 
@@ -77,9 +80,10 @@ for i in range(604, 1722):
 
     cv2.drawContours(image, contours, -1, (255, 0, 0), 3)
     imagelist.append(image)
+    timelist.append(time.time()-start_time)
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use the lower case
-out = cv2.VideoWriter('../demo20_contour.mp4', fourcc, 20.0, (480,360), True)
+out = cv2.VideoWriter('/Users/soua/Desktop/Project/Result/LineTracking/demo20_contour.mp4', fourcc, 20.0, (480,360), True)
 
 for i in range(len(imagelist)):
     # filename ='../Img_%d.jpg'%i
@@ -89,3 +93,4 @@ for i in range(len(imagelist)):
 
 out.release()
 cv2.destroyAllWindows()
+print('Avg time for contouring : ', sum(timelist)/len(timelist))

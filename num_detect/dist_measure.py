@@ -3,7 +3,10 @@ import numpy as np
 import imutils
 import cv2
 import line_detect.geom_util as geom
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
+=======
+>>>>>>> origin
 
 def find_marker_(image):
     # convert the image to grayscale, blur it, and detect edges
@@ -75,6 +78,7 @@ boundaries = [([60, 130, 30], [110, 255, 150])]  #GREEN
 datafolder = '/Users/soua/Desktop/Project/distance'
 img30_path = datafolder + '/Img_4.jpg'
 img30 = cv2.imread(img30_path)
+<<<<<<< HEAD
 img30 = adjust_gamma(img30, gamma=1.5)
 img30 = edge_enhancement(img30)
 # histg = cv2.calcHist([img30], [0], None, [256], [0,256])
@@ -84,6 +88,13 @@ img30 = edge_enhancement(img30)
 img30 = cv2.resize(img30, (500,500))
 # cv2.imshow('img30', img30)
 # cv2.waitKey(0)
+=======
+img30 = adjust_gamma(img30, gamma=1.0)
+img30 = edge_enhancement(img30)
+img30 = cv2.resize(img30, (500,500))
+cv2.imshow('img30', img30)
+cv2.waitKey(0)
+>>>>>>> origin
 hsv30 = cv2.cvtColor(img30, cv2.COLOR_BGR2HSV)
 
 mark30 = find_marker(hsv30, boundaries)
@@ -95,19 +106,29 @@ known_width = 2.4/2.54
 # find focal length by using img 30cm
 focalLenth = (mark30[1][0] * known_dist) / known_width
 
+<<<<<<< HEAD
 # cv2.drawContours(img30, [mark30], -1, (0, 0, 255), 2)
 # cv2.putText(img30, '%.2f cm' %(known_dist * 2.54), (img30.shape[1]-200, img30.shape[0]-20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255),3)
 # cv2.imshow('img30 text', img30)
 # cv2.waitKey(0)
+=======
+cv2.drawContours(img30, [mark30], -1, (0, 0, 255), 2)
+cv2.putText(img30, '%.2f cm' %(known_dist * 2.54), (img30.shape[1]-200, img30.shape[0]-20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255),3)
+cv2.imshow('img30 text', img30)
+cv2.waitKey(0)
+>>>>>>> origin
 
 img15_path = datafolder + '/Img_152.jpg'
 img15 = cv2.imread(img15_path)
 img15 = adjust_gamma(img15, gamma=2.5)
 img15 = edge_enhancement(img15)
+<<<<<<< HEAD
 histg = cv2.calcHist([img15], [0], None, [256], [0,256])
 plt.plot(histg)
 plt.show()
 
+=======
+>>>>>>> origin
 img15 = cv2.resize(img15, (500, 500))
 cv2.imshow('img15', img15)
 cv2.waitKey(0)
@@ -121,4 +142,8 @@ box = np.int0(box)
 cv2.drawContours(img15, [box], -1, (0, 0, 255), 2)
 cv2.putText(img15, '%.2f cm' %(inches * 2.54), (img15.shape[1] - 200, img15.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3)
 cv2.imshow('image', img15)
+<<<<<<< HEAD
 cv2.waitKey(0)
+=======
+cv2.waitKey(0)
+>>>>>>> origin

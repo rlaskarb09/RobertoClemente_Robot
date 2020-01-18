@@ -50,10 +50,11 @@ datafolder = '/Users/soua/Desktop/Project/RoadImg'
 imagelist = []
 timelist = []
 for i in range(604, 1722):
-    start_time = time.time()
+
     imgpath = datafolder + '/Img_%d.jpg'%i
     image = cv2.imread(imgpath)
 
+    start_time = time.time()
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     lower_yellow = np.array([20, 40, 240])

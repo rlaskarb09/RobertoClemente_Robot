@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import cv2
 
 
 def calc_line(x1, y1, x2, y2):
@@ -80,3 +81,24 @@ def calc_box_vector(box):
         idx = [0, 3, 1, 2]
     return ((box[idx[0]][0] + box[idx[1]][0]) / 2, (box[idx[0]][1] + box[idx[1]][1]) / 2), (
     (box[idx[2]][0] + box[idx[3]][0]) / 2, (box[idx[2]][1] + box[idx[3]][1]) / 2)
+
+def find_main_contour(image):
+    cnts, hierarchy = cv2.findContours(image, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:1]
+    C = None
+    if cnts is not None and len(cnts) > 0:
+        C = max(cnts, key=cv2.contourArea)
+
+    if C is None:
+        return cnts, None, None
+
+    rect = cv2.minAreaRect(C)
+    box = cv2.boxPoints(rect)
+    box = np.int0(box)
+    box = order_box(box)
+    return cnts, C, box
+
+def edge_enhancement(image):
+    kernel = np.array([[-1, -1, -1, -1, -1], [-1, 2, 2, 2, -1], [-1, 2, 8, 2, -1], [-1, 2, 2, 2, -1], [-1, -1, -1, -1, -1]])/8.0
+    output = cv2.filter2D(image, -1, kernel)
+    return output

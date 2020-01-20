@@ -94,7 +94,7 @@ ab_s = ab_s + 50
 hsv = cv2.merge((ab_h, ab_s, ab_v))
 cv2.imshow('alpha beta hsv', hsv)
 
-boundaries = [([60, 90, 80], [90, 255, 130])]  #GREEN
+boundaries = [([60, 90, 80], [90, 255, 110])]  #GREEN
 lowerG = np.array(boundaries[0][0], dtype = 'uint8')
 upperG = np.array(boundaries[0][1], dtype = 'uint8')
 
@@ -107,18 +107,14 @@ output = cv2.bitwise_and(img, img, mask = mask)
 cv2.imshow('bitwise output', output)
 # cv2.waitKey(0)
 
-cnts, max_cont, box = geom.find_main_contour(mask)
+cnts, max_cont, box, rect = geom.find_main_contour(mask)
 c = max(cnts, key = cv2.contourArea)
-cv2.drawContours(img, cnts, -1, (255, 0, 0), 2)
-cv2.imshow('contour', img)
-# cv2.waitKey(0)
+img_copy = img.copy()
+cv2.drawContours(img_copy, cnts, -1, (255, 0, 0), 2)
+cv2.imshow('contour', img_copy)
 
-# mark = cv2.minAreaRect(c)
-# box = cv2.boxPoints(mark)
-# box = np.int0(box)
 cv2.drawContours(img, [box], -1, (0, 0, 255), 2)
 cv2.imshow('box', img)
-# cv2.waitKey(0)
 
 our_cnt = None
 peri = cv2.arcLength(box, True)
@@ -128,9 +124,11 @@ if len(approx) == 4:
 
 warp = warp(our_cnt, img)
 cv2.imshow('warp img', warp)
-cv2.waitKey(0)
 
-shape, th_digits = detect(warp, ab_v)
+warp_cnt = cv2.findContours(warp, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+cv2.imshow('warp contours', warp_cnt)
+cv2.waitKey(0)
+shape, th_digits = detect(warp_cnt, ab_v)
 
 digitcnts = []
 for cc in box:

@@ -83,7 +83,7 @@ def calc_box_vector(box):
     (box[idx[2]][0] + box[idx[3]][0]) / 2, (box[idx[2]][1] + box[idx[3]][1]) / 2)
 
 def find_main_contour(image):
-    cnts, hierarchy = cv2.findContours(image, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(image, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
     cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:1]
     C = None
     if cnts is not None and len(cnts) > 0:
@@ -91,12 +91,13 @@ def find_main_contour(image):
 
     if C is None:
         return cnts, None, None
-
-    rect = cv2.minAreaRect(C)
-    box = cv2.boxPoints(rect)
-    box = np.int0(box)
-    box = order_box(box)
-    return cnts, C, box
+    epsilon = 0.05 * cv2.arcLength(C, True)
+    approx = cv2.approxPolyDP(C, epsilon, True)
+    # rect = cv2.minAreaRect(C)
+    # box = cv2.boxPoints(rect)
+    # box = np.int0(box)
+    # box = order_box(box)
+    return cnts, C, approx
 
 def edge_enhancement(image):
     kernel = np.array([[-1, -1, -1, -1, -1], [-1, 2, 2, 2, -1], [-1, 2, 8, 2, -1], [-1, 2, 2, 2, -1], [-1, -1, -1, -1, -1]])/8.0

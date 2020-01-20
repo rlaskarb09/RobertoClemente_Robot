@@ -24,6 +24,7 @@ def detect(c, thresh):
     # if the shape is a triangle, it will have 3 vertices
     if len(approx) == 3:
         shape = "triangle"
+        thresh_s = thresh
 
     # if the shape has 4 vertices, it is either a square or
     # a rectangle
@@ -41,7 +42,7 @@ def detect(c, thresh):
 
         sign = thresh[y:y + h, x:x + w]
         sign = np.rot90(sign, 3)
-        thresh = cv2.threshold(sign, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+        thresh_s = cv2.threshold(sign, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
         # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 2))
         # thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
 
@@ -54,7 +55,8 @@ def detect(c, thresh):
     # otherwise, we assume the shape is a circle
     else:
         shape = "octagon"
-    return shape, thresh
+        thresh_s = thresh
+    return shape, thresh_s
 
 # define the list of boundaries
 boundaries = [  #BGR

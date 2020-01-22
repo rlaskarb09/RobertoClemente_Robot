@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 from imutils import contours
 
-from bright.bright_function import find_marker, edge_enhancement, adjust_gamma
-from line_detect import geom_util as geom
+from bright.bright_function import edge_enhancement
+from num_detect import number_geom as geom
+
 
 def detect(c, thresh):
     # initialize the shape name and approximate the contour

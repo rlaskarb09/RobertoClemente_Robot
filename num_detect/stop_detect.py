@@ -2,8 +2,7 @@ import cv2
 import numpy as np
 
 from bright.bright_function import edge_enhancement
-import line_detect.geom_util as geom
-from num_detect.detect_function import detect
+import num_detect.number_geom as geom
 
 datafolder = '/Users/soua/Desktop/Project/sterling_demo2'
 imgpath = datafolder + '/Img_580.jpg'

@@ -4,7 +4,8 @@ import numpy as np
 from skimage.filters import threshold_yen
 from skimage.exposure import rescale_intensity
 
-from line_detect import geom_util as geom
+from num_detect import number_geom as geom
+
 
 def find_marker(image, boundary):
     for idx, (lower, upper) in enumerate(boundary):

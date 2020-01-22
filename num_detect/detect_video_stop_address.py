@@ -3,7 +3,7 @@ import numpy as np
 import time
 import os
 
-import line_detect.geom_util as geom
+import num_detect.number_geom as geom
 from bright.bright_function import edge_enhancement
 from num_detect.detect_function import detect, warp
 

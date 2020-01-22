@@ -1,12 +1,14 @@
+
 import threading
 import cv2
 import time
 from socket import *
 import queue
-from linedetect import *
+from line_detect.linedetect import *
 import numpy as np
 import pdb
-from movement import *
+from line_detect.movement import *
+import line_detect.conf as conf
 
 # # thread Lock:
 
@@ -144,7 +146,7 @@ class CommunicateThread(threading.Thread):
 
         if angle is not None:
             err = conf.shift_step * (shift - rightCenter) / 100 + conf.angle_step * (- (angle - rightAngle) / 90)
-            der = (shift - last_shift) / 100 -(angle - last_angle) / 90
+            der = ((shift - last_shift) / 100 - (angle - last_angle)/90)*0.25
             PIDf = (err * conf.kp + der * conf.kd) / 2
             print("PIDf:%.5f" % PIDf)
             print("process time:", time.time()-startTime)

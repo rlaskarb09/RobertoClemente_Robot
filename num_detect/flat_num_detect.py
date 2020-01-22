@@ -1,12 +1,10 @@
 import cv2
 import numpy as np
 
-import line_detect.geom_util as geom
+import num_detect.number_geom as geom
 from bright.bright_function import edge_enhancement
 import imutils
-from imutils import contours
-from imutils.perspective import four_point_transform
-from num_detect.detect_function import detect, warp
+from num_detect.detect_function import warp
 
 # datafolder = '/Users/soua/Desktop/Project/sterling_demo'
 # imgpath = datafolder + '/Img_1077.jpg' # 201

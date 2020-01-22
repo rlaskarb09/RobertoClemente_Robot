@@ -1,8 +1,7 @@
-from imutils import paths
 import numpy as np
 import imutils
 import cv2
-import line_detect.geom_util as geom
+import num_detect.number_geom as geom
 import matplotlib.pyplot as plt
 
 def find_marker_(image):

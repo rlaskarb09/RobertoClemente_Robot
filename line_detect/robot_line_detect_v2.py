@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
-import time
-import line_detect.geom_util as geom
+import num_detect.number_geom as geom
 
 # 이 부분에 로봇에서 받아온 이미지로 수정해서 추가
 datafolder = '/Users/soua/Desktop/Project/RoadImg'

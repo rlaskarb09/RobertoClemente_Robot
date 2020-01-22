@@ -1,13 +1,8 @@
-from imutils import paths
 import numpy as np
-import imutils
 import cv2
-import line_detect.geom_util as geom
-import matplotlib.pyplot as plt
+import num_detect.number_geom as geom
 
-from skimage import exposure
-from bright.bright_function import edge_enhancement, find_marker, threshold_yen, distance_to_camera, adjust_gamma, adjust_brightness, yen_bright, brightness
-
+from bright.bright_function import edge_enhancement
 
 #################
 datafolder = '/Users/soua/Desktop/Project/sterling_demo'

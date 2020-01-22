@@ -1,12 +1,9 @@
-from imutils import paths
 import numpy as np
-import imutils
 import cv2
-import line_detect.geom_util as geom
-import matplotlib.pyplot as plt
+import num_detect.number_geom as geom
 from skimage.filters import threshold_yen
 from skimage.exposure import rescale_intensity
-from skimage import exposure
+
 
 def find_marker(image, boundary):
     for idx, (lower, upper) in enumerate(boundary):

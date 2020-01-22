@@ -1,12 +1,9 @@
 import cv2
 import numpy as np
 
-import line_detect.geom_util as geom
+import num_detect.number_geom as geom
 from bright.bright_function import edge_enhancement
-import imutils
-from imutils import contours
-from imutils.perspective import four_point_transform
-from num_detect.detect_function import detect, warp
+from num_detect.detect_function import warp
 
 # datafolder = '/Users/soua/Desktop/Project/sterling_demo'
 # imgpath = datafolder + '/Img_1077.jpg' # 201
@@ -46,7 +43,6 @@ mask = cv2.inRange(hsv, lowerG, upperG)
 cv2.imshow('mask', mask)
 # cv2.waitKey(0)
 mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-cv2.waitKey(0)
 
 img_copy = img.copy()
 cnts, max_cont, approx_cnt = geom.find_main_contour_approx(mask)

@@ -82,7 +82,7 @@ def calc_box_vector(box):
     return ((box[idx[0]][0] + box[idx[1]][0]) / 2, (box[idx[0]][1] + box[idx[1]][1]) / 2), (
     (box[idx[2]][0] + box[idx[3]][0]) / 2, (box[idx[2]][1] + box[idx[3]][1]) / 2)
 
-def find_main_contour_approx(image):c
+def find_main_contour_approx(image):
     cnts, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:1]
     C = None

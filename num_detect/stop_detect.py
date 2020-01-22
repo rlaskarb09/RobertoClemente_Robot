@@ -3,6 +3,7 @@ import numpy as np
 
 from bright.bright_function import edge_enhancement
 import line_detect.geom_util as geom
+from num_detect.detect_function import detect
 
 datafolder = '/Users/soua/Desktop/Project/sterling_demo2'
 imgpath = datafolder + '/Img_580.jpg'
@@ -34,10 +35,13 @@ upperR = np.array(boundaries[0][1], dtype='uint8')
 mask = cv2.inRange(hsv, lowerR, upperR)
 cv2.imshow('mask', mask)
 # cv2.waitKey(0)
-cnts, max_cont, approx_cnt = geom.find_main_contour(mask)
+cnts, max_cont, approx_cnt = geom.find_main_contour_approx(mask)
 cv2.drawContours(img, max_cont, -1, (255, 0, 0), 2)
 cv2.drawContours(img, approx_cnt, -1, (0, 255, 0), 2)
 cv2.imshow('contours', img)
-cv2.waitKey(0
+cv2.waitKey(0)
 
-
+# shape, thresh = detect(max_cont, mask)
+# print(1)
+# if shape == 'octagon':
+#     cv2.putText(img, "STOP", )

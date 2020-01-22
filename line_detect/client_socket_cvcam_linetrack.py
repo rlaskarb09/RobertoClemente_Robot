@@ -100,16 +100,15 @@ class CommunicateThread(threading.Thread):
             else:
                  continue
         i=1
-
         while True:
             if not self.frameQueue.empty():
                 if self.frameQueue.qsize() > 1:
                     print('qsize:', self.frameQueue.qsize())
                 frame = self.getFrame()
-            print('#', i )
-            move("FORWARD")
-            last_shift, last_angle = self.getAction(frame, last_shift, last_angle, self.showFrame)
-            i+=1
+                print('#', i )
+                move("FORWARD")
+                last_shift, last_angle = self.getAction(frame, last_shift, last_angle, self.showFrame)
+                i+=1
 
     def find_line(self, side):
         # logging.debug(("Finding line", side))
@@ -144,11 +143,10 @@ class CommunicateThread(threading.Thread):
 
         if angle is not None:
             err = conf.shift_step * (shift - rightCenter) / 100 + conf.angle_step * (- (angle - rightAngle) / 90)
-            der = (shift - last_shift) / 100 -(angle - last_angle) / 90
-            PIDf = (err * conf.kp + der * conf.kd) / 2
+            der = conf.shift_step *(shift - last_shift) / 100 + conf.angle_step * (angle - last_angle) / 180
+            PIDf = (err * conf.kp + der/4 * conf.kd) / 2
             print("PIDf:%.5f" % PIDf)
-            print("process time:", time.time()-startTime)
-            # pdb.set_trace()
+            # print("process time:", time.time()-startTime)
             if PIDf > 0:
                 print("RIGHT")
                 motorSpeed(leftSpeed, rightSpeed - PIDf) #turn right

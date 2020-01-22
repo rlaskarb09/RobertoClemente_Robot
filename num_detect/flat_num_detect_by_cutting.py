@@ -12,8 +12,9 @@ from num_detect.detect_function import detect, warp
 # imgpath = datafolder + '/Img_1077.jpg' # 201
 
 datafolder = '/Users/soua/Desktop/Project/sterling_demo2'
+imgpath = datafolder + '/Img_51.jpg'
 # imgpath = datafolder + '/Img_45.jpg' # 102
-imgpath = datafolder + '/Img_131.jpg' # 203
+# imgpath = datafolder + '/Img_131.jpg' # 203
 
 img = cv2.imread(imgpath)
 img = edge_enhancement(img)
@@ -45,7 +46,7 @@ mask = cv2.inRange(hsv, lowerG, upperG)
 cv2.imshow('mask', mask)
 # cv2.waitKey(0)
 mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-# cv2.waitKey(0)
+cv2.waitKey(0)
 
 img_copy = img.copy()
 cnts, max_cont, approx_cnt = geom.find_main_contour_approx(mask)
@@ -106,14 +107,14 @@ for i in range(3):
     cv2.waitKey(0)
     (x, y, w, h_) = cv2.boundingRect(max_cont)
     if i == 0:
-        if w < 5:
+        if w < 10:
             digits.append(1)
         else:
             digits.append(2)
     elif i == 1:
         digits.append(0)
     elif i == 2:
-        if w < 5:
+        if w < 10:
             digits.append(1)
         else:
             roi = cut_img[y:y+h_, x:x+w]

@@ -13,13 +13,13 @@ white_min=3
 white_max=12
 
 #Driving setting
-rightCenter = 20
+rightCenter = 0
 rightAngle  = 90
 
 #PID setting
 kp = 1
 kd = 0
 # angle error
-angle_step = 0.6
+angle_step = 0.2
 # shift error
-shift_step = 0.4
+shift_step = 0.8

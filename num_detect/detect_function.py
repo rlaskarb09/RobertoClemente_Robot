@@ -5,7 +5,7 @@ def detect(c, thresh):
     # initialize the shape name and approximate the contour
     shape = "unidentified"
     peri = cv2.arcLength(c, True)
-    approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+    approx = cv2.approxPolyDP(c, 0.01*peri, True)
 
     # if the shape is a triangle, it will have 3 vertices
     if len(approx) == 3:
@@ -39,8 +39,11 @@ def detect(c, thresh):
         shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
 
     # otherwise, we assume the shape is a circle
-    else:
+    elif len(approx) > 4 :
         shape = "octagon"
+        thresh_s = thresh
+    else:
+        shape = "OTHERS"
         thresh_s = thresh
     return shape, thresh_s
 

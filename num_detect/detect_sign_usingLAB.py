@@ -24,7 +24,7 @@ for imgnum in range(1734):
     imgpath = datafolder + '/Img_%d.jpg'%imgnum
     img_ = cv2.imread(imgpath)
     img = edge_enhancement(img_)
-    
+
     # cv2.imshow('img', img)
 
     kernel = np.ones((3, 3), np.uint8)

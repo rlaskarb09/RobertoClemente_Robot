@@ -5,7 +5,7 @@ import os
 from skimage import io, color
 
 import num_detect.number_geom as geom
-from bright.bright_function import edge_enhancement
+from bright.bright_function import edge_enhancement, adjust_gamma
 from num_detect.detect_function import *
 
 # datafolder = '/Users/soua/Desktop/Project/speed25'
@@ -24,8 +24,7 @@ for imgnum in range(1734):
     imgpath = datafolder + '/Img_%d.jpg'%imgnum
     img_ = cv2.imread(imgpath)
     img = edge_enhancement(img_)
-
-    # cv2.imshow('img', img)
+    cv2.imshow('img', img)
 
     kernel = np.ones((3, 3), np.uint8)
 
@@ -41,21 +40,24 @@ for imgnum in range(1734):
 
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     L, A, B = cv2.split(lab)
+    if np.mean(L) < 120:
+        img = adjust_gamma(img, gamma = 0.6)
+        L, A, B = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2LAB))
     cv2.imshow('A space', A)
     greenA = A.copy()
-    greenA[A<90] = 0
+    greenA[A < 90] = 0
     greenA[A > 115] = 0
     cv2.imshow('greenA space', greenA)
     cv2.imshow('B space', B)
     greenB = B.copy()
-    greenB[B<140] = 0
-    greenB[B > 165] = 0
+    greenB[B < 140] = 0
+    greenB[B > 160] = 0
     maskG = cv2.bitwise_and(greenA, greenA, mask = greenB)
 
     maskG = cv2.morphologyEx(maskG, cv2.MORPH_OPEN, kernel)
     maskG = cv2.morphologyEx(maskG, cv2.MORPH_CLOSE, kernel)
     maskG = cv2.morphologyEx(maskG, cv2.MORPH_DILATE, kernel)
-    cv2.imshow('after B space', B)
+    cv2.imshow('after B space', greenB)
     cv2.imshow('mask for green', maskG)
     cv2.waitKey(0)
 
@@ -111,6 +113,7 @@ for imgnum in range(1734):
                 cut_img = thresh_cut[i]
                 each_cnts, max_cnt, box = geom.find_main_contour_box(cut_img.copy())
                 (x, y, w, h) = cv2.boundingRect(max_cnt)
+                # (x, y, w, h) = box
                 if i == 0:
                     if w < 8:
                         digits.append(1)

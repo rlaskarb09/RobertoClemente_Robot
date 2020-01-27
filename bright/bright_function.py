@@ -1,9 +1,6 @@
 import cv2
 import numpy as np
 
-from skimage.filters import threshold_yen
-from skimage.exposure import rescale_intensity
-
 from num_detect import number_geom as geom
 
 
@@ -54,11 +51,6 @@ def edge_enhancement(image):
     kernel = np.array([[-1, -1, -1, -1, -1], [-1, 2, 2, 2, -1], [-1, 2, 8, 2, -1], [-1, 2, 2, 2, -1], [-1, -1, -1, -1, -1]])/8.0
     output = cv2.filter2D(image, -1, kernel)
     return output
-
-def yen_bright(image):
-    yen_threshold = threshold_yen(image)
-    bright_img = rescale_intensity(image, (0, yen_threshold), (0, 255))
-    return bright_img
 
 def brightness(image):
    avg_color_per_row = np.average(image, axis=0)

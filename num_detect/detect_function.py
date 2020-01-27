@@ -1,6 +1,72 @@
 import cv2
 import numpy as np
 
+from bright.bright_function import edge_enhancement
+import num_detect.number_geom as geom
+
+DIGITS_LOOKUP = {
+    (1, 1, 1, 0, 1, 1, 1): 0,
+     (1, 1, 1, 1, 1, 1, 1): 0,
+    # (1, 1, 1, 1, 1, 1, 1): 1,
+    (0, 0, 1, 0, 0, 1, 0): 1,
+
+    (1, 0, 1, 1, 1, 0, 1): 2,
+    (0, 0, 1, 1, 1, 0, 1): 2,
+    (1, 0, 1, 1, 1, 0, 0): 2,
+
+    (1, 0, 1, 1, 0, 1, 1): 3,
+    (1, 0, 1, 1, 0, 0, 0): 3,
+    (1, 0, 1, 1, 0, 0, 1): 3,
+    (1, 0, 1, 0, 0, 1, 1): 3,
+    (1, 0, 0, 1, 0, 1, 1): 3,
+
+}
+
+
+def make_mask(hsvG, hsvR, lowerG, upperG, lowerR, upperR):
+    kernel = np.ones((3, 3), np.uint8)
+    maskG = cv2.inRange(hsvG, lowerG, upperG)
+    # maskG = cv2.inRange(hsvG, np.uint8([36, 54, 100]), np.uint8([76, 74, 140]))
+    maskG = cv2.morphologyEx(maskG, cv2.MORPH_CLOSE, kernel)
+
+    maskR = cv2.inRange(hsvR, lowerR, upperR)
+    maskR = cv2.morphologyEx(maskR, cv2.MORPH_CLOSE, kernel)
+    maskR = cv2.morphologyEx(maskR, cv2.MORPH_OPEN, kernel)
+    return maskG, maskR
+
+def check_STOP(image, maskR):
+    cntR, max_cntR, approx_cntR = geom.find_main_contour_approx(maskR)
+    if max_cntR is not None:
+    # try:
+        shapeR, thresh = detect(max_cntR, maskR)
+        if shapeR == 'octagon' and cv2.countNonZero(maskR) > 1000:
+            cv2.putText(image, 'STOP', (image.shape[1] - 100, image.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    # except:
+    else:
+        pass
+    return image
+
+def check_green_size(maskG):
+    maskG_cnt, maskG_max_cnt, maskG_approx = geom.find_main_contour_approx(maskG)
+    W = 0
+    H = 0
+    if (maskG_approx is not None) and len(maskG_approx) == 4:
+        maskG_cnt = max(maskG_cnt, key=cv2.contourArea)
+        maskG_rect = cv2.minAreaRect(maskG_cnt)
+        W = int(maskG_rect[1][0])
+        H = int(maskG_rect[1][1])
+    maskG_size = W*H
+    return maskG_approx, maskG_size
+
+def make_thresh(warp_img):
+    warp_gray = cv2.cvtColor(warp_img, cv2.COLOR_BGR2GRAY)
+    warp_gray = cv2.GaussianBlur(warp_gray, (3, 3), 0)
+    thresh = cv2.threshold(warp_gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    th_kernel = np.ones((2, 2), np.uint8)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, th_kernel)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, th_kernel)
+    return thresh
+
 def detect(c, thresh):
     # initialize the shape name and approximate the contour
     shape = "unidentified"

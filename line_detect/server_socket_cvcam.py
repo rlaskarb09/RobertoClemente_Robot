@@ -38,7 +38,7 @@ while True:
             print('image size:', int(length), 'bytes')
             stringData = recvall(connectionSocket, int(length))
             frame = cv2.imdecode(np.fromstring(stringData, dtype='uint8'), 1)
-            cv2.imwrite("../demo/track/try2/Img_%d.jpg"%i, frame)
+            cv2.imwrite("../demo/track/demo/Img_%d.jpg"%i, frame)
             i+=1
             # frame, position, angle = lineTrack(frame)
             # See image

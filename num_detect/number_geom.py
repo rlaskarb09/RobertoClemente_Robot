@@ -91,7 +91,7 @@ def find_main_contour_approx(image):
 
     if C is None:
         return cnts, None, None
-    epsilon = 0.05 * cv2.arcLength(C, True)
+    epsilon = 0.1 * cv2.arcLength(C, True)
     approx = cv2.approxPolyDP(C, epsilon, True)
     return cnts, C, approx
 

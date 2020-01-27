@@ -118,3 +118,4 @@ def detect_sign(image, boundaryG, boundaryR, DIGITS_LOOKUP):
                             pass
             if len(digits) == 3:
                 cv2.putText(image, '{}{}{}'.format(*digits[:3]), (image.shape[1]-100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    return image

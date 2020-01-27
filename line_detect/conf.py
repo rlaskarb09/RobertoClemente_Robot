@@ -19,7 +19,14 @@ rightAngle  = 90
 #PID setting (sum = 1)
 kp = 1
 kd = 0
+
 # angle error (sum = 1)
 angle_step = 0
 # shift error
 shift_step = 1
+
+# angle error
+angle_step = 0.2
+# shift error
+shift_step = 0.8
+

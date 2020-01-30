@@ -5,7 +5,7 @@ import json
 import numpy as np
 
 class WebSocketThread(threading.Thread):
-    def __init__(self, uri="ws://localhost:3000/robot", status=dict()):
+    def __init__(self, uri="ws://172.26.226.69:3000/robot", status=dict()):
         threading.Thread.__init__(self)
         self.uri = uri
         self.status = status
@@ -39,13 +39,7 @@ class WebSocketThread(threading.Thread):
             self.status['command'] = 'empty'
 
     async def send(self):
-        randInt = np.random.randint(0, 3)
-        if randInt == 0:
-            self.status['mode'] = 'maintenance'
-        elif randInt == 1:
-            self.status['mode'] = 'move'
-        else:
-            self.status['mode'] = 'stop'
+
         await self.websocket.send(json.dumps(self.status))
 
     def run(self):

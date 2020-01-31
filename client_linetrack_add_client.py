@@ -5,6 +5,7 @@ import cv2
 import time
 from websocket_multi_thread import WebSocketThread
 from socket import *
+from collections import deque
 import queue
 from line_detect.linedetect import *
 import pdb
@@ -20,11 +21,14 @@ from num_detect.detect_stop_addr_function import *
 FRAME_RATE = 20
 FRAME_TIME = 1 / FRAME_RATE
 INIT_TIME_DELAY = 12 * FRAME_TIME # 7cm 0.6s
+INIT_TIME_DELAY = 0.6 # 7cm 0.6s
+
 
 ADDRESS_CLOCKWISE = ['201', '202', '203', '103', '102', '101']
 ADDRESS_ANTICLOCKWISE = ['101', '102', '103', '203', '202', '201']
 STOP_QUEUE_SIZE = 5
 ADDRESS_QUEUE_SIZE = 5
+OBSTACLE_QUEUE_SIZE = 5
 
 class ReadImageThread(threading.Thread):
     def __init__(self, threadLock, frameQueue, width=320, height=240, frameRate=FRAME_RATE, bufferSize=1):
@@ -59,12 +63,15 @@ class CommunicateThread(threading.Thread):
         self.status = status
         self.frame = None
         self.frameQueue = frameQueue
-        self.stopQueue = queue.Queue(STOP_QUEUE_SIZE)
 
         # address setting
-        self.addressQueue = queue.Queue(ADDRESS_QUEUE_SIZE)
         self.address = ADDRESS_ANTICLOCKWISE
         self.directionFlag = -1
+
+        #detection setting
+        self.stopQueue = deque(maxlen = STOP_QUEUE_SIZE)
+        self.addressQueue = deque(maxlen = ADDRESS_QUEUE_SIZE)
+        self.obstacleQueue = deque(maxlen = OBSTACLE_QUEUE_SIZE)
 
         #timing
         self.TIME_DELAY = timeDelay
@@ -72,19 +79,21 @@ class CommunicateThread(threading.Thread):
 
         #sending option
         self.showFrame = showFrame
+        self.frameNum = 0
 
         #receiving option
-        self.actionLength = 10
+        self.actionLength = 11
 
     def run(self):
+        # clientSocket
+        self.clientSocket = socket(AF_INET, SOCK_STREAM)
+        self.clientSocket.connect((self.serverName, self.serverPort))
         try:
-            # clientSocket
-            self.clientSocket = socket(AF_INET, SOCK_STREAM)
-            self.clientSocket.connect((self.serverName, self.serverPort))
             self.robotRun()
-        except ConnectionRefusedError:
+        except ConnectionRefusedError:  #FIXME
             logging.error('server connection refused!')
             self.stopMaintanence(self.frame)
+        # except OSError:     #FIXME
         finally:
             move("STOP")
 
@@ -97,10 +106,12 @@ class CommunicateThread(threading.Thread):
         encoded = encodedFrame.tostring()
         self.clientSocket.send(str(len(encoded)).encode().ljust(16))
         self.clientSocket.send(encoded)
+        logging.info('frame: %d' % self.frameNum)
+        self.frameNum += 1
 
-    def flushQueue(self, queue):
-        with queue.mutex:
-            queue.queue.clear()
+    def flushFrame(self):
+        with self.frameQueue.mutex:
+            self.frameQueue.queue.clear()
 
     # def synchronization(self, frame, last_shift, last_angle):
     #     self.status['mode'] = 'move'
@@ -119,37 +130,49 @@ class CommunicateThread(threading.Thread):
         move("STOP")
         self.status['mode'] ='stop'
         self.status['location'] ='stop'
-
         while True:
             if not self.frameQueue.empty():
                 # first frame
                 self.frame = self.getFrame()
+
                 if self.status['command'] == 'move':
                     self.status['mode'] = 'move'
-                    # sync
+                    # sync  # FIXME
+                    curr_shift, curr_angle = self.detection(self.frame)
                     move("FORWARD")
                     time.sleep(self.TIME_DELAY)         # FIXME detection time 보고 delay 조정
-                    curr_shift, curr_angle = self.detection(self.frame)
+                    # curr_shift, curr_angle = self.detection(self.frame)
                     last_shift, last_angle = self.lineTrace(curr_shift, curr_angle, last_shift, last_angle)
-                    self.flushQueue(self.frameQueue)
+                    self.flushFrame()
                     frame_num += 1
+                    move("STOP")
                     break
+
             else:
                  continue
 
         while True:
             keyMessage = self.clientSocket.recv(self.actionLength)
             key = keyMessage.decode().strip()
-            if key == 'STOP':
+            if key == 'KEY_PRESSED':
                 move("STOP")
-                pdb.set_trace()
+                logging.debug('message from the server: stop')
+
+                while True:
+                    self.sendFrame(self.frame)
+                    keyMessage = self.clientSocket.recv(self.actionLength)
+                    key = keyMessage.decode().strip()
+                    if key == 'NO_KEY':
+                        logging.debug('message from the server: move again')
+                        break
+                    else:
+                        continue
 
             if not self.frameQueue.empty():
                 self.frame = self.getFrame()
                 if self.frameQueue.qsize() >= 1:        #FIXME
-                    logging.info('qsize:', self.frameQueue.qsize())
-                    self.flushQueue(self.frameQueue)
-                logging.info('#', frame_num)
+                    logging.info('qsize: %d'% self.frameQueue.qsize())
+                    self.flushFrame()
                 frame_num += 1
 
                 if self.status['command'] == 'maintenance':
@@ -160,11 +183,11 @@ class CommunicateThread(threading.Thread):
                     # detection
                     curr_shift, curr_angle = self.detection(self.frame)
                     # action
-                    if list(self.stopQueue).count(True) > len(list(self.stopQueue)) / 2:        # stop detected
-                        self.flushQueue(self.stopQueue)
+                    if self.stopQueue.count(True) > len(self.stopQueue) / 2:        # stop detected
+                        self.stopQueue = []
                         self.stopSTOP(self.frame)
-                    elif list(self.addressQueue).count(True) > len(list(self.addressQueue)) / 2:        # address detected
-                        self.flushQueue(self.addressQueue)
+                    elif self.addressQueue.count(True) > len(self.addressQueue) / 2:        # address detected
+                        self.addressQueue = []
                         address = self.address.pop(0)
                         self.status['location'] = address
                         if address in self.status['path']:
@@ -173,10 +196,8 @@ class CommunicateThread(threading.Thread):
                             last_shift, last_angle = self.lineTrace(curr_shift, curr_angle, last_shift, last_angle)
                     else:
                         last_shift, last_angle = self.lineTrace(curr_shift, curr_angle, last_shift, last_angle)
-                    frame_num += 1
 
     def find_line(self, side):
-        # logging.debug(("Finding line", side))
         logging.debug("Finding Line")
         if side == 0:
             return None, None
@@ -191,17 +212,24 @@ class CommunicateThread(threading.Thread):
         return None, None
 
     def detection(self, frame):
+        stopFlag, addressFlag = None, None
         startTime = time.time()
         hsv = prepare_stop_pic(frame)
-        frame_line, shift, angle = lineDetect(frame, hsv)
-        frame_stop, stopFlag = stopDetect(frame_line, hsv)
-        lab = prepare_addr_pic(frame)
-        frame_add, addressFlag = greenaddressDetect(frame_line, lab)
-        self.sendFrame(frame_add)  # send frame
-        logging.debug('detection | angle: %s, shift: %s, stop:%s, address:%s, detection time: %s sec'
-                      % (angle, shift, stopFlag, addressFlag, time.time() -startTime))
-        self.stopQueue.put(stopFlag)
-        self.addressQueue.put(addressFlag)
+        frame_line, shift, angle, obstacleFlag = lineDetect(frame, hsv)
+        lineTime = time.time()
+        # frame_stop, stopFlag = stopDetect(frame_line, hsv)
+        stopTime = time.time()
+        # lab = prepare_addr_pic(frame)
+        # frame_add, addressFlag = greenaddressDetect(frame_line, lab)
+        addressTime = time.time()
+        self.sendFrame(frame_line)  # send frame
+        logging.debug('detection | angle: %s, shift: %s, obstacle: %s, stop:%s, address:%s'
+                      % (angle, shift, obstacleFlag, stopFlag, addressFlag))
+        logging.debug('detection time | line+obstacle: %s sec, stop: %s sec, address: %s sec, total: %s sec'
+                      % (lineTime - startTime, stopTime - lineTime, addressTime - stopTime, time.time() - startTime))
+        self.obstacleQueue.append(obstacleFlag)
+        self.stopQueue.append(stopFlag)
+        self.addressQueue.append(addressFlag)
         return shift, angle
 
     def lineTrace(self, curr_shift, curr_angle, last_shift, last_angle):
@@ -228,16 +256,17 @@ class CommunicateThread(threading.Thread):
             last_angle = curr_angle
         else:   #line not found
             logging.debug("linetrace | no line found")
-            move("BACKWARD")    #FIXME
+            # move("BACKWARD")    #FIXME
             #obstacle detection
         return last_shift, last_angle
 
     def stopMaintenance(self, curr_frame):
         move("STOP")
         self.status['mode'] = 'maintenance'
+        print('maintenance mode')
         while True:
             if self.status['command'] == 'move':
-                self.flushQueue(self.frameQueue)
+                self.flushFrame()
                 self.frameQueue.put(curr_frame)
                 break
             else:
@@ -245,7 +274,7 @@ class CommunicateThread(threading.Thread):
 
     def stopSTOP(self, curr_frame):
         move("STOP")
-        logging.info('current address: stop')
+        print('current address: stop')
         self.status['mode'] = 'stop'
         self.status['location'] = 'stop'
         self.status['path'] = []
@@ -263,7 +292,7 @@ class CommunicateThread(threading.Thread):
 
         while True:
             if self.status['command'] == 'move':
-                self.flushQueue(self.frameQueue)
+                self.flushFrame()
                 self.frameQueue.put(curr_frame)
                 break
             else:
@@ -273,10 +302,10 @@ class CommunicateThread(threading.Thread):
         move("STOP")
         self.status['mode'] = 'stop'
         # self.status['path'].remove(address)
-        logging.info('current address:', address)
+        print('current address:', address)
         while True:
             if self.status['command'] == 'move':
-                self.flushQueue(self.frameQueue)
+                self.flushFrame()
                 self.frameQueue.put(curr_frame)
                 break
             else:
@@ -297,11 +326,14 @@ if __name__=='__main__':
     thread1 = ReadImageThread(threadLock, frameQueue)
     thread2 = CommunicateThread(threadLock, frameQueue, timeDelay= INIT_TIME_DELAY, showFrame =True, serverName='172.26.225.55', status=status)
     # thread3 = WebSocketThread(status=status)
-    thread1.start()
-    thread2.start()
-    # thread3.start()
 
-    thread1.join()
-    thread2.join()
-    # thread3.join()
+    try:
+        thread1.start()
+        thread2.start()
+        # thread3.start()
+    except KeyboardInterrupt:
+        move("STOP")
+        thread1.join()
+        thread2.join()
+        # thread3.join()
 

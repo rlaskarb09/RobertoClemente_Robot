@@ -16,17 +16,10 @@ white_max=12
 rightCenter = 0
 rightAngle  = 90
 
-#PID setting (sum = 1)
+#PID setting
 kp = 1
 kd = 0
-
-# angle error (sum = 1)
-angle_step = 0
-# shift error
-shift_step = 1
-
 # angle error
 angle_step = 0.2
 # shift error
 shift_step = 0.8
-

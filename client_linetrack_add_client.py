@@ -85,17 +85,27 @@ class CommunicateThread(threading.Thread):
         self.actionLength = 11
 
     def run(self):
-        # clientSocket
-        self.clientSocket = socket(AF_INET, SOCK_STREAM)
-        self.clientSocket.connect((self.serverName, self.serverPort))
-        try:
-            self.robotRun()
-        except ConnectionRefusedError:  #FIXME
-            logging.error('server connection refused!')
-            self.stopMaintanence(self.frame)
-        # except OSError:     #FIXME
-        finally:
-            move("STOP")
+        while True:
+            try:
+                # clientSocket
+                self.clientSocket = socket(AF_INET, SOCK_STREAM)
+                self.clientSocket.connect((self.serverName, self.serverPort))
+                self.robotRun()
+            except ConnectionRefusedError:  #FIXME
+                print('error')
+                logging.error('server connection refused!')
+                pass
+            # except OSError:     #FIXME
+            except BrokenPipeError:
+                print('error')
+                logging.error('data transfer error!')
+                pass
+            except ConnectionResetError:
+                print('error')
+                logging.error('server disconnected!')
+                pass
+            finally:
+                move("STOP")
 
     def getFrame(self):
         return self.frameQueue.get()
@@ -138,10 +148,10 @@ class CommunicateThread(threading.Thread):
                 if self.status['command'] == 'move':
                     self.status['mode'] = 'move'
                     # sync  # FIXME
-                    curr_shift, curr_angle = self.detection(self.frame)
+                    # curr_shift, curr_angle = self.detection(self.frame)
                     move("FORWARD")
                     time.sleep(self.TIME_DELAY)         # FIXME detection time 보고 delay 조정
-                    # curr_shift, curr_angle = self.detection(self.frame)
+                    curr_shift, curr_angle = self.detection(self.frame)
                     last_shift, last_angle = self.lineTrace(curr_shift, curr_angle, last_shift, last_angle)
                     self.flushFrame()
                     frame_num += 1
@@ -154,6 +164,8 @@ class CommunicateThread(threading.Thread):
         while True:
             keyMessage = self.clientSocket.recv(self.actionLength)
             key = keyMessage.decode().strip()
+            print(key)
+            # pdb.set_trace()
             if key == 'KEY_PRESSED':
                 move("STOP")
                 logging.debug('message from the server: stop')
@@ -214,12 +226,14 @@ class CommunicateThread(threading.Thread):
     def detection(self, frame):
         stopFlag, addressFlag = None, None
         startTime = time.time()
-        hsv = prepare_stop_pic(frame)
+        frame_edge = edge_enhancement(frame)
+
+        hsv = prepare_stop_pic(frame_edge)
         frame_line, shift, angle, obstacleFlag = lineDetect(frame, hsv)
         lineTime = time.time()
         # frame_stop, stopFlag = stopDetect(frame_line, hsv)
         stopTime = time.time()
-        # lab = prepare_addr_pic(frame)
+        lab = prepare_addr_pic(frame_edge)
         # frame_add, addressFlag = greenaddressDetect(frame_line, lab)
         addressTime = time.time()
         self.sendFrame(frame_line)  # send frame
@@ -251,7 +265,6 @@ class CommunicateThread(threading.Thread):
                 # print("LEFT")
                 motorSpeed(leftSpeed + 1.3 * PIDf, - rightSpeed)  #turn left
                 # motorSpeed(-leftSpeed + PIDf, - rightSpeed)  #turn left
-
             last_shift = curr_shift
             last_angle = curr_angle
         else:   #line not found
@@ -313,7 +326,7 @@ class CommunicateThread(threading.Thread):
 
 if __name__=='__main__':
     #log option
-    log_folder = './log'
+    log_folder = './log/standup3'
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
     timestr = time.strftime("/%Y%m%d_%H%M%S.log")

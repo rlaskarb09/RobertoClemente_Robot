@@ -127,7 +127,8 @@ class CommunicateThread(threading.Thread):
                 # sync
                 move("FORWARD")
                 time.sleep(self.TIME_DELAY)
-                last_shift, last_angle = self.getAction(frame, last_shift, last_angle, self.showFrame, start)
+                shift, angle = self.detection(frame)
+                last_shift, last_angle = self.getAction(shift, angle, last_shift, last_angle)
                 self.flushFrame()
                 break
             else:
@@ -139,52 +140,57 @@ class CommunicateThread(threading.Thread):
         frame_to_go = FRAME_INTERVAL[curr_address]
 
         while True:
-            keyMessage = self.clientSocket.recv(self.actionLength)
-            key = keyMessage.decode().strip()
-            # print(key)
+            try:
+                start = time.time()
+                keyMessage = self.clientSocket.recv(self.actionLength)
+                key = keyMessage.decode().strip()
 
-            if key == 'KEY_PRESSED':
-                move("STOP")
-                logging.debug('message from the server: stop')
+                if key == 'KEY_PRESSED':
+                    move("STOP")
+                    logging.debug('message from the server: stop')
 
-                while True:
-                    self.sendFrame(self.frame)
-                    keyMessage = self.clientSocket.recv(self.actionLength)
-                    key = keyMessage.decode().strip()
-                    if key == 'NO_KEY':
-                        logging.debug('message from the server: move again')
-                        break
-                    else:
-                        continue
+                    while True:
+                        self.sendFrame(self.frame)
+                        keyMessage = self.clientSocket.recv(self.actionLength)
+                        key = keyMessage.decode().strip()
+                        if key == 'NO_KEY':
+                            logging.debug('message from the server: move again')
+                            break
+                        else:
+                            continue
 
-            if not self.frameQueue.empty():
-                frame = self.getFrame()
-                if self.frameQueue.qsize() >= 1:
-                    print('qsize:', self.frameQueue.qsize())
-                    self.flushFrame()
+                if not self.frameQueue.empty():
+                    frame = self.getFrame()
+                    if self.frameQueue.qsize() > 1:
+                        print('qsize:', self.frameQueue.qsize())
+                        # self.flushFrame()
 
-                print('#', total_frame_num)
-                total_frame_num += 1
-                # hsv, stopFlag = detect_stop_sign(frame)
-                # self.sendFrame(hsv)
-                # if stopFlag:
-                #     curr_address = 'STOP'
-                #     idx = 0
-                #     next_address = ADDRESS[idx]
-                #     frame_to_go = FRAME_INTERVAL[next_address]
-                #     self.stopAddress(frame, curr_address, next_address)
-                # if frame_num == frame_to_go:
-                #     curr_address = ADDRESS[idx]
-                #     idx = (idx + 1) % NUM_ADDRESS
-                #     next_address = ADDRESS[idx]
-                #     frame_to_go = FRAME_INTERVAL[next_address]
-                #     self.stopAddress(frame, curr_address, next_address)
-                #     frame_num = 0
-                # else:
-                self.status['mode'] = 'move'
-                move("FORWARD")
-                last_shift, last_angle = self.getAction(frame, last_shift, last_angle, self.showFrame, start)
-                frame_num += 1
+                    print('#', total_frame_num)
+                    total_frame_num += 1
+                    # hsv, stopFlag = detect_stop_sign(frame)
+                    # self.sendFrame(hsv)
+                    # if stopFlag:
+                    #     curr_address = 'STOP'
+                    #     idx = 0
+                    #     next_address = ADDRESS[idx]
+                    #     frame_to_go = FRAME_INTERVAL[next_address]
+                    #     self.stopAddress(frame, curr_address, next_address)
+                    # if frame_num == frame_to_go:
+                    #     curr_address = ADDRESS[idx]
+                    #     idx = (idx + 1) % NUM_ADDRESS
+                    #     next_address = ADDRESS[idx]
+                    #     frame_to_go = FRAME_INTERVAL[next_address]
+                    #     self.stopAddress(frame, curr_address, next_address)
+                    #     frame_num = 0
+                    # else:
+                    self.status['mode'] = 'move'
+                    move("FORWARD")
+                    shift, angle = self.detection(frame)
+                    print(time.time() - start)
+                    last_shift, last_angle = self.getAction(shift, angle, last_shift, last_angle)
+                    frame_num += 1
+            except:
+                pass
 
 
     def find_line(self, side):
@@ -202,16 +208,9 @@ class CommunicateThread(threading.Thread):
                 return angle, shift
         return None, None
 
-    def getAction(self, frame, last_shift, last_angle, show, start_time):
-
-        leftSpeed = 0.5
-        rightSpeed = 0.5
-        rightCenter = conf.rightCenter
-        rightAngle = conf.rightAngle
-        start = time.time()
-
-        # frame_edge = edge_enhancement(frame)
-        hsv = prepare_stop_pic(frame)
+    def detection(self, frame):
+        frame_edge = edge_enhancement(frame)
+        hsv = prepare_stop_pic(frame_edge)
         frame_line, shift, angle, obstacleFlag = lineDetect(frame, hsv)
         # frame,  shift, angle = lineDetect(frame, frame)
 
@@ -225,18 +224,23 @@ class CommunicateThread(threading.Thread):
 
         # print(msg_t)
         # cv2.putText(frame, msg_t, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-        if show == 'TRUE':
-            # send frame
-            self.sendFrame(frame_line)
-            curr_time = time.time() - start
+        # send frame
+        self.sendFrame(frame_line)
+        return shift, angle
 
-            print("detection time: %.5f" % curr_time)
+
+    def getAction(self, shift, angle,  last_shift, last_angle):
+
+        leftSpeed = 0.5
+        rightSpeed = 0.5
+        rightCenter = conf.rightCenter
+        rightAngle = conf.rightAngle
 
         if angle is not None:
             err = conf.shift_step * (shift - rightCenter) / 100 + conf.angle_step * (- (angle - rightAngle) / 90)
             der = conf.shift_step *(shift - last_shift) / 100 + conf.angle_step * (angle - last_angle) / 180
             PIDf = (err * conf.kp + der/4 * conf.kd) / 2
-            logging.debug("linetrace | err:  %.5f, der = %.5f, PIDf:%.5f" % (err, der, PIDf))
+            logging.debug("linetrace | angle: %.5f, shift: %.5f, err:  %.5f, der = %.5f, PIDf:%.5f" % (angle, shift, err, der, PIDf))
             # print("PIDf:%.5f" % PIDf)
             # print("process time:", time.time()-startTime)
             if PIDf > 0:
@@ -250,7 +254,8 @@ class CommunicateThread(threading.Thread):
             last_shift = shift
             last_angle = angle
         else:
-            move("BACKWARD")
+            logging.debug("linetrace | no line found")
+            # move("BACKWARD")
 
         return last_shift, last_angle
 
@@ -295,14 +300,14 @@ class CommunicateThread(threading.Thread):
 
 if __name__=='__main__':
     # log option
-    log_folder = './log/standup3'
+    log_folder = '../log/standup3'
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
     timestr = time.strftime("/%Y%m%d_%H%M%S.log")
     logging.basicConfig(filename=log_folder + timestr, level=logging.DEBUG,
                         format='[%(asctime)s][%(levelname)s|%(threadName)s] >> %(message)s')
 
-    frameQueue = queue.Queue()
+    frameQueue = queue.LifoQueue()
     threadLock = threading.Lock()
     status = {'command': 'move', 'mode': 'stop', 'location':'stop', 'path':[]}
 

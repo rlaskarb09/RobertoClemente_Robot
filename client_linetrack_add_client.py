@@ -21,7 +21,7 @@ from num_detect.detect_stop_addr_function import *
 FRAME_RATE = 20
 FRAME_TIME = 1 / FRAME_RATE
 INIT_TIME_DELAY = 12 * FRAME_TIME # 7cm 0.6s
-INIT_TIME_DELAY = 0.6 # 7cm 0.6s
+INIT_TIME_DELAY = 0.4 # 7cm 0.6s
 
 
 ADDRESS_CLOCKWISE = ['201', '202', '203', '103', '102', '101']
@@ -155,17 +155,16 @@ class CommunicateThread(threading.Thread):
                     last_shift, last_angle = self.lineTrace(curr_shift, curr_angle, last_shift, last_angle)
                     self.flushFrame()
                     frame_num += 1
-                    move("STOP")
+                    # move("STOP")
                     break
 
             else:
                  continue
 
         while True:
+            start  = time.time()
             keyMessage = self.clientSocket.recv(self.actionLength)
             key = keyMessage.decode().strip()
-            print(key)
-            # pdb.set_trace()
             if key == 'KEY_PRESSED':
                 move("STOP")
                 logging.debug('message from the server: stop')
@@ -184,7 +183,7 @@ class CommunicateThread(threading.Thread):
                 self.frame = self.getFrame()
                 if self.frameQueue.qsize() >= 1:        #FIXME
                     logging.info('qsize: %d'% self.frameQueue.qsize())
-                    self.flushFrame()
+                    # self.flushFrame()
                 frame_num += 1
 
                 if self.status['command'] == 'maintenance':
@@ -207,6 +206,7 @@ class CommunicateThread(threading.Thread):
                         else:
                             last_shift, last_angle = self.lineTrace(curr_shift, curr_angle, last_shift, last_angle)
                     else:
+                        print(time.time() - start)
                         last_shift, last_angle = self.lineTrace(curr_shift, curr_angle, last_shift, last_angle)
 
     def find_line(self, side):
@@ -227,14 +227,14 @@ class CommunicateThread(threading.Thread):
         stopFlag, addressFlag = None, None
         startTime = time.time()
         frame_edge = edge_enhancement(frame)
-
+        # frame_edge = frame
         hsv = prepare_stop_pic(frame_edge)
         frame_line, shift, angle, obstacleFlag = lineDetect(frame, hsv)
         lineTime = time.time()
-        # frame_stop, stopFlag = stopDetect(frame_line, hsv)
+        frame_stop, stopFlag = stopDetect(frame_line, hsv)
         stopTime = time.time()
         lab = prepare_addr_pic(frame_edge)
-        # frame_add, addressFlag = greenaddressDetect(frame_line, lab)
+        frame_add, addressFlag = greenaddressDetect(frame_line, lab)
         addressTime = time.time()
         self.sendFrame(frame_line)  # send frame
         logging.debug('detection | angle: %s, shift: %s, obstacle: %s, stop:%s, address:%s'
@@ -326,13 +326,13 @@ class CommunicateThread(threading.Thread):
 
 if __name__=='__main__':
     #log option
-    log_folder = './log/standup3'
+    log_folder = './log/'
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
     timestr = time.strftime("/%Y%m%d_%H%M%S.log")
     logging.basicConfig(filename=log_folder + timestr, level=logging.DEBUG, format='[%(asctime)s][%(levelname)s|%(threadName)s] >> %(message)s')
 
-    frameQueue = queue.Queue()
+    frameQueue = queue.LifoQueue()
     threadLock = threading.Lock()
     status = {'command': 'move', 'mode': 'stop', 'location':'stop', 'path':[]}  #FIXME
 

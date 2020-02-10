@@ -8,7 +8,8 @@ from socket import *
 from num_detect.detect_stop_addr_function import *
 
 # frame save folder
-parent_dir = '/Users/chwaaaa/Downloads/CMU/Project/demo/0131'
+# parent_dir = '/Users/chwaaaa/Downloads/CMU/Project/demo/0131'
+parent_dir = "/Users/soua/Desktop/Project/Robot_Img/0201"
 if not os.path.exists(parent_dir):
     os.mkdir(parent_dir)
 

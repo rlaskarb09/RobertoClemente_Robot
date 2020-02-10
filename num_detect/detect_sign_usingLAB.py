@@ -9,35 +9,39 @@ from bright.bright_function import edge_enhancement, adjust_gamma
 from num_detect.detect_function import *
 
 # datafolder = '/Users/soua/Desktop/Project/speed25'
-datafolder = '/Users/soua/Desktop/Project/200122nightdemo'
+datafolder = '/Users/soua/Desktop/Project/Robot_Img/0201'
 ADDR_LOOKUP = [[1,0,1], [1,0,2], [1,0,3], [2,0,1], [2,0,2], [2,0,3]]
 
-boundaryR = [([1, 20, 200], [20, 150, 255])] # RED
+boundaryR = [([1, 5, 200], [20, 150, 255])] # RED
 lowerR = np.array(boundaryR[0][0], dtype='uint8')
 upperR = np.array(boundaryR[0][1], dtype='uint8')
 
 time_list = []
 img_list = []
 file_num = len(os.listdir(datafolder))
-for imgnum in range(1734):
-    imgnum = 636
-    imgpath = datafolder + '/Img_%d.jpg'%imgnum
+for imgnum in range(file_num):
+    imgnum = 137
+    imgpath = datafolder + '/img_%d.jpg'%imgnum
     img_ = cv2.imread(imgpath)
     img = edge_enhancement(img_)
     cv2.imshow('img', img)
+    # cv2.waitKey(0)
 
     kernel = np.ones((3, 3), np.uint8)
 
+    # STOP detection
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    # cv2.imshow('hsv', hsv)
+    cv2.imshow('hsv', hsv)
     # _, S, V = cv2.split(hsv)
     # S =  S + 50
     # hsvR = cv2.merge((_, S, V))
     # cv2.imshow('hsv Red', hsv)
     maskR = cv2.inRange(hsv, lowerR, upperR)
     maskR = cv2.morphologyEx(maskR, cv2.MORPH_CLOSE, kernel)
-    # cv2.imshow('mask for Red', maskR)
+    cv2.imshow('mask for Red', maskR)
+    cv2.waitKey(0)
 
+    # SIGN detection
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     L, A, B = cv2.split(lab)
     if np.mean(L) < 120:
@@ -46,7 +50,7 @@ for imgnum in range(1734):
     cv2.imshow('A space', A)
     greenA = A.copy()
     greenA[A < 90] = 0
-    greenA[A > 115] = 0
+    greenA[A > 110] = 0
     cv2.imshow('greenA space', greenA)
     cv2.imshow('B space', B)
     greenB = B.copy()
@@ -72,9 +76,9 @@ for imgnum in range(1734):
         pass
 
     maskG_cnt, maskG_max_cnt, maskG_approx = geom.find_main_contour_approx(maskG)
-    # cv2.drawContours(img_, maskG_cnt, -1, (0, 255, 0), 2)
-    # cv2.imshow('mask Green contour', img_)
-    # cv2.waitKey(0)
+    cv2.drawContours(img_, maskG_cnt, -1, (0, 255, 0), 2)
+    cv2.imshow('mask Green contour', img_)
+    cv2.waitKey(0)
     W = 0
     H = 0
     # if (maskG_approx is not None) and len(maskG_approx) == 4:
@@ -94,12 +98,13 @@ for imgnum in range(1734):
         peri = cv2.arcLength(maskG_approx, True)
         approx = cv2.approxPolyDP(maskG_approx, 0.02*peri, True)
         warp_img = warp(approx, img)
-
+        cv2.imshow('warp img', warp_img)
         # make thresh from warp image
         thresh = make_thresh(warp_img)
+        cv2.imshow('thresh', thresh)
 
         thresh_cut = []
-        if thresh.shape[1] >= 45:
+        if thresh.shape[1] >= 40:
             for i in range(3):
                 cut_size = thresh.shape[1]//3
                 if i == 2:
@@ -111,6 +116,8 @@ for imgnum in range(1734):
             digits = []
             for i in range(3):
                 cut_img = thresh_cut[i]
+                cv2.imshow('cut image', cut_img)
+                cv2.waitKey(0)
                 each_cnts, max_cnt, box = geom.find_main_contour_box(cut_img.copy())
                 (x, y, w, h) = cv2.boundingRect(max_cnt)
                 # (x, y, w, h) = box
@@ -156,8 +163,8 @@ for imgnum in range(1734):
                 cv2.putText(img_, '{}{}{}'.format(*digits[:3]), (img_.shape[1]-100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         else:
             pass
-    # cv2.imshow('process...', img_)
-    # cv2.waitKey(0)
+    cv2.imshow('process...', img_)
+    cv2.waitKey(0)
     time_list.append(time.time()-start_time)
     print('%d th image processing------'%imgnum)
     img_list.append(img_)

@@ -215,8 +215,8 @@ class CommunicateThread(threading.Thread):
             curr_time = time.time() - start_time
         if angle is not None:
             err = conf.shift_step * (shift - rightCenter) / 100 + conf.angle_step * (- (angle - rightAngle) / 90)
-            der = conf.shift_step *(shift - last_shift) / 100 + conf.angle_step * (-(angle - last_angle) )/ 90
-            PIDf = (err * conf.kp + der/4 * conf.kd) / 2
+            # der = conf.shift_step *(shift - last_shift) / 100 + conf.angle_step * (-(angle - last_angle) )/ 90
+            PIDf = (err * conf.kp) / 2
             # print("PIDf:%.5f" % PIDf)
             # print("process time:", time.time()-startTime)
             if PIDf > 0:

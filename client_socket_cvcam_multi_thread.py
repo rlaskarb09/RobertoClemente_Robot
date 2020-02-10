@@ -38,7 +38,7 @@ class ReadImageThread(threading.Thread):
         print('run time:', end - start)
 
 class CommunicateThread(threading.Thread):
-    def __init__(self, threadLock, frameQueue, serverName='172.26.226.69', serverPort=8888):
+    def __init__(self, threadLock, frameQueue, serverName='172.26.226.86', serverPort=8888):
         threading.Thread.__init__(self)
         self.threadLock = threadLock
         self.encodeParam = [int(cv2.IMWRITE_JPEG_QUALITY), 70]

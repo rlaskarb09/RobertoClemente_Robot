@@ -62,7 +62,7 @@ class ReadImageThread(threading.Thread):
         print('run time:', end - start)
 
 class CommunicateThread(threading.Thread):
-    def __init__(self, threadLock, frameQueue, serverName='172.26.226.69', timeDelay=0.6, showFrame = True, serverPort=8888, status=None):
+    def __init__(self, threadLock, frameQueue, serverName='172.26.226.89', timeDelay=0.6, showFrame = True, serverPort=8888, status=None):
         threading.Thread.__init__(self)
         self.threadLock = threadLock
         self.encodeParam = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
@@ -238,7 +238,8 @@ class CommunicateThread(threading.Thread):
 
         if angle is not None:
             err = conf.shift_step * (shift - rightCenter) / 100 + conf.angle_step * (- (angle - rightAngle) / 90)
-            der = conf.shift_step *(shift - last_shift) / 100 + conf.angle_step * (angle - last_angle) / 180
+            # der = conf.shift_step *(shift - last_shift) / 100 + conf.angle_step * (angle - last_angle) / 180
+            der = conf.shift_step * (shift - last_shift) / 100 + conf.angle_step * (-(angle - last_angle) / 90)
             PIDf = (err * conf.kp + der/4 * conf.kd) / 2
             logging.debug("linetrace | angle: %.5f, shift: %.5f, err:  %.5f, der = %.5f, PIDf:%.5f" % (angle, shift, err, der, PIDf))
             # print("PIDf:%.5f" % PIDf)
@@ -300,7 +301,15 @@ class CommunicateThread(threading.Thread):
 
 if __name__=='__main__':
     # log option
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     log_folder = '../log/standup3'
+=======
+    log_folder = './log'
+>>>>>>> Stashed changes
+=======
+    log_folder = './log'
+>>>>>>> Stashed changes
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
     timestr = time.strftime("/%Y%m%d_%H%M%S.log")
@@ -312,7 +321,7 @@ if __name__=='__main__':
     status = {'command': 'move', 'mode': 'stop', 'location':'stop', 'path':[]}
 
     thread1 = ReadImageThread(threadLock, frameQueue)
-    thread2 = CommunicateThread(threadLock, frameQueue, timeDelay= INIT_TIME_DELAY, showFrame = 'TRUE' , serverName='172.26.225.55', status=status)
+    thread2 = CommunicateThread(threadLock, frameQueue, timeDelay= INIT_TIME_DELAY, showFrame = 'TRUE' , serverName='172.26.226.86', status=status)
     # thread3 = WebSocketThread(status=status)
 
     thread1.start()

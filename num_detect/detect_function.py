@@ -21,6 +21,7 @@ DIGITS_LOOKUP = {
     (1, 0, 1, 0, 0, 1, 1): 3,
     (1, 0, 0, 1, 0, 1, 1): 3,
     (1, 0, 1, 1, 0, 1, 0): 3,
+    (1, 0, 0, 1, 0, 1, 0): 3,
 }
 
 
@@ -61,11 +62,11 @@ def check_green_size(maskG):
 
 def make_thresh(warp_img):
     warp_gray = cv2.cvtColor(warp_img, cv2.COLOR_BGR2GRAY)
-    warp_gray = cv2.GaussianBlur(warp_gray, (3, 3), 0)
-    thresh = cv2.threshold(warp_gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    # warp_gray = cv2.GaussianBlur(warp_gray, (3, 3), 0)
+    thresh = cv2.threshold(warp_gray, 200, 255, cv2.THRESH_BINARY)[1]
     th_kernel = np.ones((2, 2), np.uint8)
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, th_kernel)
-    # thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, th_kernel)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, th_kernel)
     return thresh
 
 def detect(c, thresh):

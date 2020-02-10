@@ -303,7 +303,11 @@ if __name__=='__main__':
     # log option
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     log_folder = '../log/standup3'
+=======
+    log_folder = './log'
+>>>>>>> Stashed changes
 =======
     log_folder = './log'
 >>>>>>> Stashed changes

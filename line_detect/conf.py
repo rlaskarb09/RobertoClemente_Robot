@@ -23,13 +23,9 @@ rightCenter = -5
 rightAngle  = 90
 
 #PID setting
-<<<<<<< Updated upstream
 kp =1
 kd = 0
-=======
-kp = 0.66
-kd = 0.33
->>>>>>> Stashed changes
+
 # angle error
 angle_step = 0.2
 # shift error

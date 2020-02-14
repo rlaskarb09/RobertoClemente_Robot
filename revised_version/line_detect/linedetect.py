@@ -139,6 +139,7 @@ def prepare_pic(hsv):
 #     # cv2.imshow('mask', mask)
 #     return mask, width, height / 3
 
+
 # def edge_enhancement(image):
 #     kernel = np.array([[-1, -1, -1, -1, -1], [-1, 2, 2, 2, -1], [-1, 2, 8, 2, -1], [-1, 2, 2, 2, -1], [-1, -1, -1, -1, -1]])/8.0
 #     output = cv2.filter2D(image, -1, kernel)
